@@ -5,14 +5,14 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: vahdekiv <vahdekiv@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/01 14:44:21 by vahdekiv          #+#    #+#             */
-/*   Updated: 2025/09/01 15:53:48 by vahdekiv         ###   ########.fr       */
+/*   Created: 2025/09/02 10:31:35 by vahdekiv          #+#    #+#             */
+/*   Updated: 2025/09/02 11:28:38 by vahdekiv         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <unistd.h>
-#include <stdarg.h>
 #include <stdint.h>
+#include <stdarg.h>
+#include <unistd.h>
 
 int	ft_putchar(char c)
 {
@@ -24,6 +24,8 @@ int	ft_putstr(char *s)
 	int	i;
 
 	i = 0;
+	if (!s)
+		return (write(1, "(null)", 6));
 	while (s[i])
 	{
 		ft_putchar(s[i]);
@@ -32,44 +34,47 @@ int	ft_putstr(char *s)
 	return (i);
 }
 
-int	ft_tohex(unsigned long int n, unsigned long int base)
-{
-	int		count;
-	char	*hexlow;
-
-	count = 0;
-	hexlow = "0123456789abcdef";
-	if (n >= base)
-	{
-		count += ft_tohex(n / base, base);
-		ft_putchar(hexlow[n % base]);
-	}
-	else
-		ft_putchar(hexlow[n % base]);
-	count++;
-	return (count);
-}
-
-int	ft_putnbr(int num)
+int	ft_putnbr(int nb)
 {
 	int	count;
 
 	count = 0;
-	if (num < 0)
+	if (nb == -2147483648)
+	{
+		return (ft_putstr("-2147483648"));
+	}
+	if (nb == 0)
+		return (ft_putchar('0'));
+	if (nb < 0)
 	{
 		ft_putchar('-');
 		count++;
+		nb = -nb;
 	}
-	else if (num == 0)
+	if (nb > 9)
 	{
-		ft_putchar('0');
-		count = 1;
+		count += ft_putnbr(nb / 10);
 	}
-	else if (num > 9)
+	ft_putchar(nb % 10 + '0');
+	count++;
+	return (count);
+}
+
+int	ft_tohex(unsigned long int n, unsigned long int base)
+{
+	int		count;
+	char	*hex;
+
+	count = 0;
+	hex = "0123456789abcdef";
+	if (n >= base)
 	{
-		count += ft_putnbr(num / 10);
+		count += ft_tohex(n / base, base);
+		ft_putchar(hex[n % base]);
 	}
-	count += ft_putchar((num % 10) + '0');
+	else
+		ft_putchar(hex[n % base]);
+	count++;
 	return (count);
 }
 
@@ -85,17 +90,19 @@ int	print_format(va_list *ap, char c)
 	else if (c == 'i')
 		count += ft_putnbr(va_arg(*ap, int));
 	else if (c == 'x')
-		count += ft_tohex(va_arg(*ap, unsigned int), 16);
+		count += ft_tohex(va_arg(*ap, unsigned long int), 16);
+	else
+		return (-1);
 	return (count);
 }
 
-int	exam_printf(const char *format, ...)
+int	ft_printf(const char *format, ...)
 {
 	va_list	ap;
 	int		count;
 
 	count = 0;
-	if(!format)
+	if (!format)
 		return (-1);
 	va_start(ap, format);
 	while (*format)
@@ -104,13 +111,14 @@ int	exam_printf(const char *format, ...)
 		{
 			format++;
 			if (*format == '\0')
-				return (-1);
+				return (va_end(ap), -1);
 			count += print_format(&ap, *format);
 		}
 		else
 			count += ft_putchar(*format);
 		format++;
 	}
+	va_end(ap);
 	return (count);
 }
 
@@ -119,19 +127,18 @@ int	exam_printf(const char *format, ...)
 int	main(void)
 {
 	int				i;
-	int				value;
 	char			c;
 	char			*s;
 	unsigned int	x;
+	int				value;
 
-	i = 900;
-	c = 'f';
-	s  = "hello";
-	x = 8759;
-
-	value = exam_printf("hello %s, blabla %c beepboop %i boop %x\n", s, c, i, x);
-	exam_printf("%i\n", value);
-//	value = printf("hello %s, blabla %c beepboop %i boop %x\n", s, c, i, x);
-//	printf("%i\n", value);
+	i = 4567;
+	c = 'd';
+	s = "hello world";
+	x = 7485;
+	value = ft_printf("blaa %i, bla %c, bla %s, blabla %x\n", i, c, s, x);
+	ft_printf("%i\n", value);
+	value = printf("blaa %i, bla %c, bla %s, blabla %x\n", i, c, s, x);
+	printf("%i\n", value);
 	return (0);
 }
